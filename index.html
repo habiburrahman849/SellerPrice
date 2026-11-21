@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SellerPrice by FutureWala — Smart Daraz Pricing</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-badge">SP</span>
+        <div>
+          <div class="brand-title">SellerPrice <span class="brand-by">by FutureWala</span></div>
+          <div class="brand-sub">Simple Daraz Pricing &amp; Discount Calculator</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" id="btnExportCsv" class="btn btn-blue">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <!-- Simplified Main Calculator Card -->
+    <section class="panel main-panel">
+      <div class="row-top">
+        <div class="field autocomplete-wrap span-2">
+          <label for="catSearch">1. Product Category (Auto Commission %)</label>
+          <input type="text" id="catSearch" autocomplete="off" placeholder="Search category e.g. SmartWatches, Laptops, Skin Care...">
+          <div id="catDropdown" class="dropdown hidden"></div>
+        </div>
+        <div class="field">
+          <label for="comm">Commission (%)</label>
+          <input type="number" id="comm" value="10.00" min="0" max="35" step="0.01">
+        </div>
+      </div>
+
+      <div class="row-4">
+        <div class="field">
+          <label for="productName">Product Name</label>
+          <input type="text" id="productName" placeholder="e.g. Men Wallet">
+        </div>
+        <div class="field">
+          <label for="purchaseCost">Purchase Cost (Rs.)</label>
+          <input type="number" id="purchaseCost" value="100" min="1" step="10">
+        </div>
+        <div class="field">
+          <label for="targetPct">Target Profit (%)</label>
+          <input type="number" id="targetPct" value="50" min="1" max="300" step="1">
+        </div>
+        <div class="field">
+          <label for="discountPct">Discount Off (%)</label>
+          <input type="number" id="discountPct" value="50" min="0" max="90" step="1">
+        </div>
+      </div>
+
+      <!-- Collapsible Advanced Settings -->
+      <div class="adv-bar">
+        <button type="button" id="btnToggleAdv" class="btn btn-slate btn-sm">+ Advanced Settings (VAT, Packaging, Ads, Returns)</button>
+        <button type="button" id="btnCalculate" class="btn btn-orange btn-lg">Calculate Now</button>
+      </div>
+
+      <div id="advBox" class="adv-box hidden">
+        <div class="row-4">
+          <div class="field">
+            <label for="targetType">Profit Base</label>
+            <select id="targetType">
+              <option value="roi">On Purchase Cost (ROI)</option>
+              <option value="margin">On Sale Price (Margin)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="packagingCost">Packaging (Rs.)</label>
+            <input type="number" id="packagingCost" value="20" min="0" step="5">
+          </div>
+          <div class="field">
+            <label for="returnPct">Return Buffer (%)</label>
+            <input type="number" id="returnPct" value="5" min="0" max="50" step="1">
+          </div>
+          <div class="field">
+            <label for="adsPct">Ads / PPC (%)</label>
+            <input type="number" id="adsPct" value="5" min="0" max="50" step="1">
+          </div>
+        </div>
+        <div class="row-3">
+          <div class="field">
+            <label for="vat">Province VAT</label>
+            <select id="vat">
+              <option value="0.15">KPK / Sindh / Balochistan (15%)</option>
+              <option value="0.16">Punjab (16%)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="handling">Handling Mode</label>
+            <select id="handling">
+              <option value="dropoff">Drop-off (Rs. 10-60)</option>
+              <option value="pickup_std">Pickup &lt; 8kg (Rs. 30)</option>
+              <option value="pickup_bulky">Pickup 8kg+ (Rs. 120)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="paymentType">Payment Method</label>
+            <select id="paymentType">
+              <option value="cod">Cash on Delivery (2% ATL)</option>
+              <option value="prepaid">Prepaid / Card (1% ATL)</option>
+            </select>
+          </div>
+        </div>
+        <div class="toggle-group">
+          <label class="toggle-chip"><input type="checkbox" id="fsm"><span>Free Shipping Max (~6%)</span></label>
+          <label class="toggle-chip"><input type="checkbox" id="voucher"><span>Voucher Max (2%)</span></label>
+          <label class="toggle-chip"><input type="checkbox" id="nonAtl"><span>Non-ATL (+1% ST WHT)</span></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Result KPI Cards with One-Click Copy Buttons -->
+    <section class="kpi-grid">
+      <div class="kpi-card card-orange">
+        <div class="kpi-label">List Price (Before Discount)</div>
+        <div class="kpi-value" id="kpiOriginalPrice">Rs. 0</div>
+        <button type="button" class="btn btn-copy btn-orange" data-copy="orig">Copy List Price</button>
+      </div>
+      <div class="kpi-card card-blue">
+        <div class="kpi-label">Final Sale Price (Customer Pays)</div>
+        <div class="kpi-value" id="kpiSalePrice">Rs. 0</div>
+        <button type="button" class="btn btn-copy btn-blue" data-copy="sale">Copy Sale Price</button>
+      </div>
+      <div class="kpi-card card-green">
+        <div class="kpi-label">Your Net Profit</div>
+        <div class="kpi-value text-pos" id="kpiNetProfit">Rs. 0</div>
+        <div class="kpi-meta" id="kpiDualMargin">Cost ROI: 0% | Sale Margin: 0%</div>
+      </div>
+      <div class="kpi-card card-slate">
+        <div class="kpi-label">Daraz Fees + Extra Costs</div>
+        <div class="kpi-value" id="kpiAllDeductions">Rs. 0</div>
+        <div class="kpi-meta" id="kpiPayout">Net Payout: Rs. 0</div>
+      </div>
+    </section>
+
+    <!-- Pure Urdu Summary -->
+    <section class="urdu-card" dir="rtl" lang="ur">
+      <div class="urdu-top">
+        <span class="urdu-head">آسان اردو خلاصہ</span>
+        <button type="button" class="btn btn-green btn-sm" id="btnCopyUrdu" dir="ltr">Copy Urdu</button>
+      </div>
+      <p class="urdu-text" id="urduSummary">...</p>
+    </section>
+
+    <!-- Automatic Recent History (No Database / No Login) -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Recent Calculation History</h2>
+        <button type="button" id="btnClearHistory" class="btn btn-red btn-sm">Clear History</button>
+      </div>
+      <div class="table-wrap">
+        <table class="tracker-table">
+          <thead>
+            <tr>
+              <th>Product / Category</th>
+              <th>Cost</th>
+              <th>List Price</th>
+              <th>Discount</th>
+              <th>Sale Price</th>
+              <th>Net Profit</th>
+              <th>ROI / Margin</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr class="empty-row"><td colspan="8">Click "Calculate Now" above to save your product calculation here automatically.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="categories.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
